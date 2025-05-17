@@ -1,12 +1,23 @@
+#define BLYNK_TEMPLATE_ID "TMPL6q8TuZTSK"
+#define BLYNK_TEMPLATE_NAME "Irradiance Monitoring"
+#define BLYNK_AUTH_TOKEN "yhHXb3msqXmOYfqpJJEuPjIgjUqQuIc6"
+
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
+#include <WiFi.h>
+#include <BlynkSimpleEsp32.h>
 
+// Replace these with your actual credentials
+char auth[] = "get blnk authtoken";   //Sorry but this token is for us developers only
+char ssid[] = "pakibago dipende sa wifi ssid"; //WIFI SSID
+char pass[] = "wifi pw"; //WIFI PASSWORD
+
+// Pin configuration
 #define BUZZER_PIN 12
 #define SOLAR_ADC_PIN 34
 #define LDR_ADC_PIN 35
 
-// LCD config
-LiquidCrystal_I2C lcd(0x27, 20, 4);  // change 0x27 to the address you find
+LiquidCrystal_I2C lcd(0x27, 20, 4); // LCD config
 
 // Constants
 const float EMVADO = 0.000007875;  // Area in m²
@@ -22,9 +33,12 @@ void setup() {
   Serial.begin(115200);
   pinMode(BUZZER_PIN, OUTPUT);
 
-lcd.begin();
-  lcd.backlight();
+  WiFi.begin(ssid, pass);
+  Blynk.begin(auth, ssid, pass);
 
+  Wire.begin();
+  lcd.begin();
+  lcd.backlight();
   lcd.setCursor(0, 0);
   lcd.print(" Solar Monitor  ");
   delay(1000);
@@ -74,6 +88,8 @@ void buzzerFeedback(float irradiance) {
 }
 
 void loop() {
+  Blynk.run();  // Always call this!
+
   unsigned long now = millis();
   float dt = (now - lastTime) / 1000.0;
 
@@ -82,9 +98,9 @@ void loop() {
   float power = calculatePower(voltage);
   float irradiance = calculateIrradiance(power);
   float derivative = calculateDerivative(irradiance, lastIrradiance, dt);
-
   int ldrValue = analogRead(LDR_ADC_PIN);
 
+  // Serial Debug
   Serial.println("=== Measurement ===");
   Serial.print("Voltage (V): "); Serial.println(voltage, 3);
   Serial.print("Power (mW): "); Serial.println(power * 1000, 2);
@@ -92,7 +108,7 @@ void loop() {
   Serial.print("dI/dt: "); Serial.println(derivative, 2);
   Serial.print("LDR Value: "); Serial.println(ldrValue);
 
-  // LCD Update
+  // LCD Display
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Irradiance:");
@@ -118,6 +134,12 @@ void loop() {
 
   // Feedback
   buzzerFeedback(irradiance);
+
+  // Send to Blynk
+  Blynk.virtualWrite(V0, irradiance);
+  Blynk.virtualWrite(V1, voltage);
+  Blynk.virtualWrite(V2, ldrValue);
+  Blynk.virtualWrite(V3, derivative);
 
   lastIrradiance = irradiance;
   lastTime = now;
