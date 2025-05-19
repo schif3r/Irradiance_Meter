@@ -34,5 +34,5 @@ Visual Studio : for Web Deployment
 
 Thingspeak : for data monitoring IOT integration
 
-Render : for wesite deployment
+Render : for website deployment
 
