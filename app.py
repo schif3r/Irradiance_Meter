@@ -1,40 +1,33 @@
-from flask import Flask, jsonify, send_from_directory, render_template_string
+from flask import Flask, jsonify, send_from_directory
 import requests
+import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='.')
 
-# ThingSpeak configuration
-THINGSPEAK_CHANNEL_ID = "2966722"
-THINGSPEAK_API_KEY = "YOUR_API_KEY"  # optional if the channel is public
-THINGSPEAK_URL = f"https://api.thingspeak.com/channels/{THINGSPEAK_CHANNEL_ID}/feeds.json?results=1"
+# Replace with your actual ThingSpeak Channel ID and API Key
+THINGSPEAK_CHANNEL_ID = '2966722'
+API_KEY = '78DWLBFEZD6V1CXY'  # You can leave this blank if not required for public read
+BASE_URL = f'https://api.thingspeak.com/channels/{THINGSPEAK_CHANNEL_ID}/feeds.json?results=1'
 
-# Route: Root (Homepage)
 @app.route('/')
-def home():
-    return render_template_string("""
-        <h1>Solar Irradiance Dashboard</h1>
-        <p>Use <code>/api/data</code> to fetch the latest sensor data.</p>
-    """)
+def index():
+    return send_from_directory('.', 'index.html')
 
-# Route: API data endpoint
 @app.route('/api/data')
 def get_data():
     try:
-        response = requests.get(THINGSPEAK_URL)
+        response = requests.get(BASE_URL)
         data = response.json()
+        feed = data['feeds'][0]
 
-        if 'feeds' in data and len(data['feeds']) > 0:
-            feed = data['feeds'][0]
-            result = {
-                "irradiance": feed.get("field1"),
-                "voltage": feed.get("field2"),
-                "ldr_value": feed.get("field3"),
-                "derivative": feed.get("field4"),
-                "buzzer_status": feed.get("field5")
-            }
-            return jsonify(result)
-        else:
-            return jsonify({"error": "No data available"}), 404
+        return jsonify({
+            "irradiance": feed['field1'],
+            "voltage": feed['field2'],
+            "ldr": feed['field3'],
+            "derivative": feed['field4'],
+            "buzzer": feed['field5']
+        })
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
