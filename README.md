@@ -5,7 +5,7 @@ Group 3
 Altobar, Jim Clet N.
 Dungo, Loriedelle V.
 Jordan, Jien R.
-
+ 
 Hardware Inventory:
 
 ESP 32 Wroom
