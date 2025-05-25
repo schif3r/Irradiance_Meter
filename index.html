@@ -1,61 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Solar Irradiance Dashboard</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 30px;
-      background: #f4f4f4;
-      color: #333;
-    }
-    h1 {
-      text-align: center;
-    }
-    .card {
-      background: white;
-      border-radius: 10px;
-      padding: 20px;
-      margin: 15px auto;
-      max-width: 500px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    .value {
-      font-size: 1.5em;
-      font-weight: bold;
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Solar Irradiance Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 30px;
+            background: #f4f4f4;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px auto;
+            max-width: 500px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .value {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        #weather-card {
+            background: #dff0ff;
+            border-left: 5px solid #007BFF;
+        }
+    </style>
 </head>
 <body>
-  <h1>Solar Irradiance Dashboard</h1>
-  <div class="card">
-    <p>Irradiance: <span class="value" id="irradiance">Loading...</span> W/m²</p>
-    <p>Voltage: <span class="value" id="voltage">Loading...</span> V</p>
-    <p>LDR Value: <span class="value" id="ldr">Loading...</span></p>
-    <p>Derivative: <span class="value" id="derivative">Loading...</span></p>
-    <p>Buzzer Status: <span class="value" id="buzzer">Loading...</span></p>
-  </div>
+    <h1>Solar Irradiance Dashboard</h1>
 
-  <script>
+    <!-- Sensor Data Card -->
+    <div class="card">
+        <p>Irradiance: <span class="value" id="irradiance">Loading...</span> W/m²</p>
+        <p>Voltage: <span class="value" id="voltage">Loading...</span> V</p>
+        <p>LDR Value: <span class="value" id="ldr">Loading...</span></p>
+        <p>Derivative: <span class="value" id="derivative">Loading...</span></p>
+        <p>Buzzer Status: <span class="value" id="buzzer">Loading...</span></p>
+    </div>
+
+    <!-- Weather Prediction Card -->
+    <div class="card" id="weather-card">
+        <h2>Predicted Weather</h2>
+        <p><span class="value" id="predicted-weather">Loading...</span></p>
+    </div>
+
+    <script>
     async function loadData() {
       try {
-        const response = await fetch('/api/data');
-        const data = await response.json();
+        const dataResponse = await fetch('/api/data');
+        const data = await dataResponse.json();
 
         document.getElementById('irradiance').textContent = data.irradiance;
         document.getElementById('voltage').textContent = data.voltage;
         document.getElementById('ldr').textContent = data.ldr;
         document.getElementById('derivative').textContent = data.derivative;
         document.getElementById('buzzer').textContent = data.buzzer;
+
       } catch (err) {
-        console.error('Error fetching data:', err);
+        console.error('Error fetching sensor data:', err);
       }
     }
 
-    loadData();
-    setInterval(loadData, 5000); // Refresh every 5 seconds
-  </script>
+    async function loadWeatherPrediction() {
+      try {
+        const response = await fetch('/api/weather');
+        const weatherData = await response.json();
+
+        document.getElementById('predicted-weather').textContent = weatherData.predicted_weather;
+      } catch (err) {
+        console.error('Error fetching weather prediction:', err);
+      }
+    }
+
+    function refreshAll() {
+      loadData();
+      loadWeatherPrediction();
+    }
+
+    refreshAll();
+    setInterval(refreshAll, 5000); // Update every 5 seconds
+    </script>
 </body>
 </html>
